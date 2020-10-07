@@ -22,7 +22,6 @@ char time[15] = {0};
 char scan[15] = {0};
 //--------------------------------------------------------------------------------
 
-
 //Pin definition.
 const int knockSensor = 0;         // Piezo sensor on pin GPA6.
 const int programSwitch = 1;       // If this is high we program a new code. GPD1
@@ -45,7 +44,6 @@ int knockReadings[maximumKnocks];   // When someone knocks this array fills with
 int knockSensorValue = 0;           // Last reading of the knock sensor.
 int programButtonPressed = false;   // Flag so we remember the programming button setting at the end of the cycle.
 
-
 void Heartbeat_TMR0_Callback(void){
 	GPC_12 = ~GPC_12;
 	TIMER0->TISR.TIF = 1;//clear flag
@@ -59,10 +57,6 @@ void TimeCount_TMR1_Callback(void){
 	//print_lcd(3,time);
 	//--------------------------------------------------------------------------------
 }
-
-
-
-
 
 void InitClock(){
 		UNLOCKREG(); //unlock the protected registers    
@@ -121,12 +115,13 @@ void RedLED_OFF(){GPC_14 = 1; GPC_15 = 1;}
 void RedLED_Pattern(){
 	int i = 0;
 	GPC_14 = 0; GPC_15 = 1;
-  for (i=0;i<10;i++){
-      DrvSYS_Delay(100000); 
-      GPC_14 = 1; GPC_15 = 0;
-      DrvSYS_Delay(100000); 
-      GPC_14 = 0; GPC_15 = 1;   
-  }
+	
+  	for (i=0;i<10;i++){
+     	 	DrvSYS_Delay(100000); 
+      		GPC_14 = 1; GPC_15 = 0;
+      		DrvSYS_Delay(100000); 
+      		GPC_14 = 0; GPC_15 = 1;   
+  	}
 }
 
 void Motor_ON(){GPD_0 = 1;}
@@ -146,11 +141,11 @@ void setup() {
 	DrvGPIO_SetPortMask(E_GPD, 0xFFFC); 
   
 	DrvGPIO_Open(E_GPD, lockMotor, E_IO_OUTPUT); 		//Lock Motor
-  DrvGPIO_Open(E_GPD, programSwitch, E_IO_INPUT); //Program Switch
+  	DrvGPIO_Open(E_GPD, programSwitch, E_IO_INPUT); //Program Switch
 	
 	GPC_12 = 0; // Heartbeat
 	Motor_OFF(); //Motor output
-  GreenLED_ON(); // Green LED on, everything is go. ***********************************************************CHECK
+  	GreenLED_ON(); // Green LED on, everything is go.
 }
 
 long map(long x,long in_min,long in_max,long out_min,long out_max){
@@ -170,7 +165,7 @@ int validateKnock(){
     if (knockReadings[i] > 0){
       currentKnockCount++;
     }
-    if (secretCode[i] > 0){  	//*****************************************************TODO: precalculate this.
+    if (secretCode[i] > 0){ 
       secretKnockCount++;
     }
     
@@ -204,8 +199,8 @@ int validateKnock(){
         }
         DrvSYS_Delay(50000);
       }
-	  return false; 	// We don't unlock the door when we are recording a new knock.
-		programButton = 0;
+	return false; 	// We don't unlock the door when we are recording a new knock.
+	programButton = 0;
   }
   
   if (currentKnockCount != secretKnockCount){
@@ -235,14 +230,13 @@ int validateKnock(){
 }
 
 
-
 void triggerDoorUnlock(){
-  sprintf(state,"Welcome!     ");
+  	sprintf(state,"Welcome!     ");
 	print_lcd(0,state);
-  int i=0;
+  	int i=0;
   
-  Motor_ON(); // turn the motor on for a bit.
-  GreenLED_ON();   //Green LED is high
+  	Motor_ON(); // turn the motor on for a bit.
+  	GreenLED_ON();   //Green LED is high
   
   // Blink the green LED a few times for more visual feedback.
   for (i=0; i < 10; i++){   
@@ -257,11 +251,7 @@ void triggerDoorUnlock(){
 	
 }
 
-
-
-
-void listenToSecretKnock(){ 
-	
+void listenToSecretKnock(){ 	
   int i = 0;
 	
   // First lets reset the listening array.
@@ -277,40 +267,44 @@ void listenToSecretKnock(){
   if (programButtonPressed==true){
      RedLED_OFF();     		// and the red ones too if we're programming a new knock.
   }
+	
   DrvSYS_Delay(knockFadeTime*1000); // wait for this peak to fade before we listen to the next one.
   GreenLED_ON(); 
   if (programButtonPressed==true){
      RedLED_ON();                            
   }
+	
   do {
 		
     //listen for the next knock or wait for it to timeout. 
-    
-		DrvADC_StartConvert(); //Start conversion
-		while(DrvADC_IsConversionDone()==0){/*wait*/};//Wait for conversion to complete
-		knockSensorValue = DrvADC_GetConversionData(knockSensor);
-		DrvADC_StopConvert(); //Stop conversion
-		//------------------------------TROUBLESHOT---------------------------------------
-		//sprintf(conv,"ADC %4d",knockSensorValue);
-		//print_lcd(2,conv);
-		//--------------------------------------------------------------------------------
+	DrvADC_StartConvert(); //Start conversion
+	while(DrvADC_IsConversionDone()==0){/*wait*/};//Wait for conversion to complete
+	knockSensorValue = DrvADC_GetConversionData(knockSensor);
+	DrvADC_StopConvert(); //Stop conversion
+	//------------------------------TROUBLESHOT---------------------------------------
+	//sprintf(conv,"ADC %4d",knockSensorValue);
+	//print_lcd(2,conv);
+	//--------------------------------------------------------------------------------
 		
     if (knockSensorValue >= threshold){    //got another knock...
-      //record the delay time.
-      now = timeCounter; // count time since we began running the current program. Arduino: now=millis();
-      knockReadings[currentKnockNumber] = now-startTime;
-      currentKnockNumber ++;   //increment the counter
-      startTime = now;   // and reset our timer for the next knock
-      GreenLED_OFF();    //Green LED is low
-      if (programButtonPressed==true){
-        RedLED_OFF();          // and the red ones too if we're programming a new knock.
-      }
-      DrvSYS_Delay(knockFadeTime*1000);   // again, a little delay to let the knock decay.
-      GreenLED_ON();    //Green LED is high  
-      if (programButtonPressed==true){
-        RedLED_ON();     // and the red ones too if we're programming a new knock.
-			}
-		}
+	      //record the delay time.
+	      now = timeCounter; // count time since we began running the current program. Arduino: now=millis();
+	      knockReadings[currentKnockNumber] = now-startTime;
+	      currentKnockNumber ++;   //increment the counter
+	      startTime = now;   // and reset our timer for the next knock
+	      GreenLED_OFF();    //Green LED is low
+
+	      if (programButtonPressed==true){
+		RedLED_OFF();          // and the red ones too if we're programming a new knock.
+	      }
+
+	      DrvSYS_Delay(knockFadeTime*1000);   // again, a little delay to let the knock decay.
+	      GreenLED_ON();    //Green LED is high 
+
+	      if (programButtonPressed==true){
+		RedLED_ON();     // and the red ones too if we're programming a new knock.
+	      }
+	}
 
     now = timeCounter;
     
@@ -321,6 +315,7 @@ void listenToSecretKnock(){
   if (programButtonPressed == false){   // only if we're not in progrmaing mode.
     if (validateKnock() == true){
       triggerDoorUnlock(); 
+	    
     } else {
       sprintf(state,"Wrong Knock     ");
 			print_lcd(0,state);
@@ -333,17 +328,16 @@ void listenToSecretKnock(){
       }
       GreenLED_ON();   //Green LED is high 
     }
+	  
   } else { // if we're in programming mode we still validate the lock, we just don't do anything with the lock
     validateKnock();
     // and we blink the reds alternately to show that program is complete.
     sprintf(state,"New lock stored");
-		print_lcd(0,state);
+    print_lcd(0,state);
     RedLED_Pattern();
   }
-	programButton = 0;
+  programButton = 0;
 }
-
-
 
 void loop() {
   // Listen for any knock at all.
@@ -357,28 +351,26 @@ void loop() {
 	//print_lcd(1,scan);
 	//--------------------------------------------------------------------------------
 	
-	
 	DrvADC_StartConvert(); //Start conversion
 	while(DrvADC_IsConversionDone()==0){/*wait*/};//Wait for conversion to complete
 	knockSensorValue = DrvADC_GetConversionData(knockSensor);
-  DrvADC_StopConvert(); //Stop conversion
+  	DrvADC_StopConvert(); //Stop conversion
 	
-  if (programButton == programKey){  // is the program button pressed?  ***********************************************************CHECK
+  if (programButton == programKey){  // is the program button pressed?
     
-		programButtonPressed = true;    // Yes, so lets save that state
-    RedLED_ON();        // and turn on two red lights too so we know we're programming.
+	programButtonPressed = true;    // Yes, so lets save that state
+    	RedLED_ON();        // and turn on two red lights too so we know we're programming.
 		
-		sprintf(state,"Programming     ");
-		print_lcd(0,state);
+	sprintf(state,"Programming     ");
+	print_lcd(0,state);
 		
-	} else {
+} else {
     
-		programButtonPressed = false;
-    RedLED_OFF(); 
+	programButtonPressed = false;
+    	RedLED_OFF(); 
 		
-		sprintf(state,"Listening      ");
-		print_lcd(0,state);
-		
+	sprintf(state,"Listening      ");
+	print_lcd(0,state);	
   }
   
   if (knockSensorValue >= threshold){
@@ -387,18 +379,10 @@ void loop() {
 } 
 
 
-
-
-
-
 int main (void) { 
-		setup();
-		while(1){ 
-				//timeCounter = 0;
-				loop();
-				DrvSYS_Delay(50000); //50ms				
+	setup();
+	while(1){ 
+		loop();
+		DrvSYS_Delay(50000); //50ms				
 	 }
 }
-
-						
-
