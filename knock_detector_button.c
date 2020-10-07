@@ -16,26 +16,25 @@ char state[15]={0};
 int timeCounter = 0;
 int programButton = 0;
 
-//------------------------------TROUBLESHOT---------------------------------------
+//------------------------------TROUBLESHOOTING-----------------------------------
 char conv[15] = {0};
 char time[15] = {0};
 char scan[15] = {0};
 int knock = 0;
 //--------------------------------------------------------------------------------
 
-
 //Pin definition.
 const int knockSensor = 6;         // Piezo sensor on pin GPA6.
 const int programSwitch = 1;       // If this is high we program a new code. GPD1
 const int lockMotor = 0;           // Gear motor used to turn the lock. GPD0
-const int programKey = 5;					 // Key that will be pressed to program.
+const int programKey = 5;	   // Key that will be pressed to program.
 
 // Tuning constants.  Could be made vars and hoooked to potentiometers for soft configuration, etc.
-const int threshold = 100;           // Minimum signal from the piezo to register as a knock ***********************************************************CHECK
+const int threshold = 100;         // Minimum signal from the piezo to register as a knock
 const int rejectValue = 25;        // If an individual knock is off by this percentage of a knock we don't unlock..
 const int averageRejectValue = 15; // If the average timing of the knocks is off by this percent we don't unlock.
 const int knockFadeTime = 150;     // milliseconds we allow a knock to fade before we listen for another one. (Debounce timer.)
-const int lockTurnTime = 7000;      // milliseconds that we run the motor to get it to go a half turn.
+const int lockTurnTime = 7000;     // milliseconds that we run the motor to get it to go a half turn.
 
 const int maximumKnocks = 20;       // Maximum number of knocks to listen for.
 const int knockComplete = 1200;     // Longest time to wait for a knock before we assume that it's finished.
@@ -46,7 +45,6 @@ int knockReadings[maximumKnocks];   // When someone knocks this array fills with
 int knockSensorValue = 0;           // Last reading of the knock sensor.
 int programButtonPressed = false;   // Flag so we remember the programming button setting at the end of the cycle.
 
-
 void Heartbeat_TMR0_Callback(void){
 	GPC_12 = ~GPC_12;
 	TIMER0->TISR.TIF = 1;//clear flag
@@ -55,23 +53,24 @@ void Heartbeat_TMR0_Callback(void){
 void TimeCount_TMR1_Callback(void){
 	timeCounter = timeCounter + 20;
 	TIMER1->TISR.TIF = 1;//clear flag
-	//------------------------------TROUBLESHOT---------------------------------------
+	//------------------------------TROUBLESHOOTING-----------------------------------
 	//sprintf(time,"time %2.3f",(double)timeCounter/1000);
 	//print_lcd(3,time);
 	//--------------------------------------------------------------------------------
 }
+
 void Knock_Callback(void){
-		knock++;
-		GPA_13 = ~GPA_13;
+	knock++;
+	GPA_13 = ~GPA_13;
 }
 
 void InitClock(){
-		UNLOCKREG(); //unlock the protected registers    
-		DrvSYS_SetOscCtrl(E_SYS_OSC22M,1); //select the 22MHz RC clock   
-		while(DrvSYS_GetChipClockSourceStatus(E_SYS_OSC22M) != 1); //wait until the clock is stable     
-		DrvSYS_SelectHCLKSource(7); //HCLK clock source 0: external 12MHz
-		LOCKREG(); //Lock the protected registers
-		DrvSYS_SetClockDivider(E_SYS_HCLK_DIV,2);
+	UNLOCKREG(); //unlock the protected registers    
+	DrvSYS_SetOscCtrl(E_SYS_OSC22M,1); //select the 22MHz RC clock   
+	while(DrvSYS_GetChipClockSourceStatus(E_SYS_OSC22M) != 1); //wait until the clock is stable     
+	DrvSYS_SelectHCLKSource(7); //HCLK clock source 0: external 12MHz
+	LOCKREG(); //Lock the protected registers
+	DrvSYS_SetClockDivider(E_SYS_HCLK_DIV,2);
 }
 				 				
 void InitGPIO(){
@@ -124,12 +123,12 @@ void RedLED_OFF(){GPC_14 = 1; GPC_15 = 1;}
 void RedLED_Pattern(){
 	int i = 0;
 	GPC_14 = 0; GPC_15 = 1;
-  for (i=0;i<10;i++){
-      DrvSYS_Delay(100000); 
-      GPC_14 = 1; GPC_15 = 0;
-      DrvSYS_Delay(100000); 
-      GPC_14 = 0; GPC_15 = 1;   
-  }
+  	for (i=0;i<10;i++){
+      		DrvSYS_Delay(100000); 
+      		GPC_14 = 1; GPC_15 = 0;
+      		DrvSYS_Delay(100000); 
+      		GPC_14 = 0; GPC_15 = 1;   
+  	}
 }
 
 void Motor_ON(){GPD_0 = 1;}
@@ -149,18 +148,17 @@ void setup() {
 	//Mask port D bits 15:2
 	DrvGPIO_SetPortMask(E_GPD, 0xFFFC); 
   
-	DrvGPIO_Open(E_GPD, lockMotor, E_IO_OUTPUT); 		//Lock Motor
-  DrvGPIO_Open(E_GPD, programSwitch, E_IO_INPUT); //Program Switch
+	DrvGPIO_Open(E_GPD, lockMotor, E_IO_OUTPUT); 	//Lock Motor
+  	DrvGPIO_Open(E_GPD, programSwitch, E_IO_INPUT); //Program Switch
 	
 	GPC_12 = 0; // Heartbeat
 	Motor_OFF(); //Motor output
-  GreenLED_ON(); // Green LED on, everything is go. ***********************************************************CHECK
+ 	GreenLED_ON(); // Green LED on, everything is go.
 }
 
 long map(long x,long in_min,long in_max,long out_min,long out_max){
 	return (x-in_min)*(out_max-out_min)/(in_max-in_min)+out_min;
 }
-
 
 int validateKnock(){
   int i=0;
@@ -174,7 +172,7 @@ int validateKnock(){
     if (knockReadings[i] > 0){
       currentKnockCount++;
     }
-    if (secretCode[i] > 0){  	//*****************************************************TODO: precalculate this.
+    if (secretCode[i] > 0){ 
       secretKnockCount++;
     }
     
@@ -186,8 +184,9 @@ int validateKnock(){
   // If we're recording a new knock, save the info and get out of here.
   if (programButtonPressed==true){
       for (i=0;i<maximumKnocks;i++){ // normalize the times
-        secretCode[i]= map(knockReadings[i],0, maxKnockInterval, 0, 100);
+      	secretCode[i]= map(knockReadings[i],0, maxKnockInterval, 0, 100);
       }
+	  
       // And flash the lights in the recorded pattern to let us know it's been programmed.
       GreenLED_OFF(); 
       RedLED_OFF();		
@@ -208,8 +207,9 @@ int validateKnock(){
         }
         DrvSYS_Delay(50000);
       }
-	  return false; 	// We don't unlock the door when we are recording a new knock.
-		programButton = 0;
+	
+	return false; 	// We don't unlock the door when we are recording a new knock.
+	programButton = 0;
   }
   
   if (currentKnockCount != secretKnockCount){
@@ -217,10 +217,7 @@ int validateKnock(){
   }
   
   /*  Now we compare the relative intervals of our knocks, not the absolute time between them.
-      (ie: if you do the same pattern slow or fast it should still open the door.)
-      This makes it less picky, which while making it less secure can also make it
-      less of a pain to use if you're tempo is a little slow or fast. 
-  */
+      (ie: if you do the same pattern slow or fast it should still open the door.) */
   int totaltimeDifferences=0;
   int timeDiff=0;
   for (i=0;i<maximumKnocks;i++){ // Normalize the times
@@ -239,10 +236,9 @@ int validateKnock(){
 }
 
 
-
 void triggerDoorUnlock(){
   sprintf(state,"Welcome!     ");
-	print_lcd(0,state);
+  print_lcd(0,state);
   int i=0;
   
   Motor_ON(); // turn the motor on for a bit.
@@ -256,16 +252,12 @@ void triggerDoorUnlock(){
       DrvSYS_Delay(100000); 
   }
 	
-	DrvSYS_Delay(lockTurnTime*1000);  // Wait a bit.
-	Motor_OFF(); // Turn the motor off. 
+  DrvSYS_Delay(lockTurnTime*1000);  // Wait a bit.
+  Motor_OFF(); // Turn the motor off. 
 	
 }
 
-
-
-
 void listenToSecretKnock(){ 
-	
   int i = 0;
 	
   // First lets reset the listening array.
@@ -289,34 +281,36 @@ void listenToSecretKnock(){
   do {
 		
     //listen for the next knock or wait for it to timeout. 
-		
-		//------------------------------TROUBLESHOT---------------------------------------
-		//sprintf(conv,"knock %4d",knock);
-		//print_lcd(2,conv);	
-		//--------------------------------------------------------------------------------
+
+	//------------------------------TROUBLESHOT---------------------------------------
+	//sprintf(conv,"knock %4d",knock);
+	//print_lcd(2,conv);	
+	//--------------------------------------------------------------------------------
     
-		//if (knockSensorValue >= threshold){    //got another knock...
-		if(knock > 0){
-			knock = 0;
+	//if (knockSensorValue >= threshold){    //got another knock...
+	if(knock > 0){
+		knock = 0;
 			
-      //record the delay time.
-      now = timeCounter; // count time since we began running the current program. Arduino: now=millis();
-      knockReadings[currentKnockNumber] = now-startTime;
-      currentKnockNumber ++;   //increment the counter
-      startTime = now;   // and reset our timer for the next knock
-      GreenLED_OFF();    //Green LED is low
-      if (programButtonPressed==true){
-        RedLED_OFF();          // and the red ones too if we're programming a new knock.
-      }
-      DrvSYS_Delay(knockFadeTime*1000);   // again, a little delay to let the knock decay.
-      GreenLED_ON();    //Green LED is high  
-      if (programButtonPressed==true){
-        RedLED_ON();     // and the red ones too if we're programming a new knock.
-			}
-			
-		}
+     		//record the delay time.
+      		now = timeCounter; // count time since we began running the current program. Arduino: now=millis();
+      		knockReadings[currentKnockNumber] = now-startTime;
+      		currentKnockNumber ++;   //increment the counter
+      		startTime = now;   // and reset our timer for the next knock
+      		GreenLED_OFF();    //Green LED is low
 		
-    now = timeCounter;
+      		if (programButtonPressed==true){
+        		RedLED_OFF();          // and the red ones too if we're programming a new knock.
+      		}
+		
+      		DrvSYS_Delay(knockFadeTime*1000);   // again, a little delay to let the knock decay.
+      		GreenLED_ON();    //Green LED is high  
+      
+		if (programButtonPressed==true){
+        		RedLED_ON();     // and the red ones too if we're programming a new knock.
+		}	
+	}
+		
+    	now = timeCounter;
     
     //did we timeout or run out of knocks?
   } while ((now-startTime < knockComplete) && (currentKnockNumber < maximumKnocks));
@@ -325,26 +319,32 @@ void listenToSecretKnock(){
   if (programButtonPressed == false){   // only if we're not in progrmaing mode.
     if (validateKnock() == true){
       triggerDoorUnlock(); 
+	    
     } else {
       sprintf(state,"Wrong Knock     ");
-			print_lcd(0,state);
+      print_lcd(0,state);
       GreenLED_OFF();   //Green LED is low 
+	    
       for (i=0;i<10;i++){					
         RedLED_ON();  // We didn't unlock, so blink the red LEDs as visual feedback.
         DrvSYS_Delay(100000); 
         RedLED_OFF();
         DrvSYS_Delay(100000); 
       }
+	    
       GreenLED_ON();   //Green LED is high 
     }
+	  
   } else { // if we're in programming mode we still validate the lock, we just don't do anything with the lock
+	 
     validateKnock();
     // and we blink the reds alternately to show that program is complete.
     sprintf(state,"New lock stored");
-		print_lcd(0,state);
+    print_lcd(0,state);
     RedLED_Pattern();
   }
-	programButton = 0;
+
+  programButton = 0;
 }
 
 
@@ -360,46 +360,34 @@ void loop() {
 	//sprintf(scan,"scan %d",programButton);
 	//print_lcd(1,scan);
 	//--------------------------------------------------------------------------------
-	
-	
-  if (programButton == programKey){  // is the program button pressed?  ***********************************************************CHECK
+		
+  if (programButton == programKey){  // is the program button pressed?
     
-		programButtonPressed = true;    // Yes, so lets save that state
-    RedLED_ON();        // and turn on two red lights too so we know we're programming.
+	programButtonPressed = true;    // Yes, so lets save that state
+    	RedLED_ON();        // and turn on two red lights too so we know we're programming.
 		
-		sprintf(state,"Programming     ");
-		print_lcd(0,state);
+	sprintf(state,"Programming     ");
+	print_lcd(0,state);
+	  
+  } else {
+	programButtonPressed = false;
+    	RedLED_OFF(); 
 		
-	} else {
-    
-		programButtonPressed = false;
-    RedLED_OFF(); 
-		
-		sprintf(state,"Listening      ");
-		print_lcd(0,state);
-		
+	sprintf(state,"Listening      ");
+	print_lcd(0,state);	
   }
   
   //if (knockSensorValue >= threshold){
 	if(knock > 0){
 		knock = 0;
-    listenToSecretKnock();
-  }
+		listenToSecretKnock();
+  	}
 } 
 
-
-
-
-
-
 int main (void) { 
-		setup();
-		while(1){ 
-				//timeCounter = 0;
-				loop();
-				DrvSYS_Delay(50000); //50ms				
+	setup();
+	while(1){ 
+		loop();
+		DrvSYS_Delay(50000); //50ms				
 	 }
 }
-
-						
-
