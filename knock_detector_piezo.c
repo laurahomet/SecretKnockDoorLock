@@ -29,11 +29,11 @@ const int lockMotor = 0;           // Gear motor used to turn the lock. GPD0
 const int programKey = 5;					 // Key that will be pressed to program.
 
 // Tuning constants.  Could be made vars and hoooked to potentiometers for soft configuration, etc.
-const int threshold = 4000;           // Minimum signal from the piezo to register as a knock ***********************************************************CHECK
+const int threshold = 4000;        // Minimum signal from the piezo to register as a knock
 const int rejectValue = 25;        // If an individual knock is off by this percentage of a knock we don't unlock..
 const int averageRejectValue = 15; // If the average timing of the knocks is off by this percent we don't unlock.
 const int knockFadeTime = 150;     // milliseconds we allow a knock to fade before we listen for another one. (Debounce timer.)
-const int lockTurnTime = 7000;      // milliseconds that we run the motor to get it to go a half turn.
+const int lockTurnTime = 7000;     // milliseconds that we run the motor to get it to go a half turn.
 
 const int maximumKnocks = 20;       // Maximum number of knocks to listen for.
 const int knockComplete = 1200;     // Longest time to wait for a knock before we assume that it's finished.
